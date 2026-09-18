@@ -1,0 +1,12 @@
+.detail-timeline{display:block;background:linear-gradient(145deg,#11131a,#171323);border:2px solid #423682;border-radius:13px;padding:19px 22px 21px;margin-bottom:20px;box-shadow:0 0 0 1px #22c5ca22,0 13px 30px #0005}
+.timeline-branch{display:flex;align-items:end;justify-content:space-between;gap:20px;border-bottom:1px solid #3b3e4d;padding-bottom:15px;margin-bottom:20px}
+.timeline-branch label{display:grid;grid-template-columns:auto minmax(300px,470px);align-items:center;gap:13px;color:#fff;font-size:11px;font-weight:800}
+.timeline-branch label span{color:#b9bfd0;text-transform:uppercase;letter-spacing:.08em;font-size:9px}
+.timeline-branch select{width:100%;background:#21232e;border:1px solid #676078;border-radius:7px;color:#fff;padding:9px 11px;font:700 10px inherit;box-shadow:inset 3px 0 #22c5ca}
+.timeline-branch small{color:#9da5b7;font-size:10px}.timeline-branch small b{color:#22c5ca}
+.timeline-flow{display:flex;align-items:center;width:100%;overflow:auto;padding:4px 0 2px}
+.timeline-step{display:grid;grid-template-columns:34px auto;align-items:center;gap:10px;flex:0 0 auto;color:#8e95a7;white-space:nowrap;font-size:11px}
+.timeline-step span{display:grid;place-items:center;width:32px;height:32px;border:2px solid #505668;border-radius:50%;background:#151720;color:#a5acbb;font-size:11px;font-weight:800;position:relative;z-index:2}
+.timeline-step b{font-size:11px;letter-spacing:.01em}.timeline-step.done{color:#e9fbfa}.timeline-step.done span{background:#19b8b0;border-color:#5aeee4;color:#061918;box-shadow:0 0 15px #19b8b066}.timeline-step.current b{color:#fff}.timeline-step.current span{background:#ffd34f;border-color:#fff0a6;color:#1b1605;box-shadow:0 0 0 5px #ffd34f22,0 0 18px #ffd34f55}
+.timeline-line{height:4px;min-width:50px;flex:1;margin:0 12px;background:#353a49;border-radius:8px;box-shadow:inset 0 1px #ffffff0d}.timeline-line.filled{background:linear-gradient(90deg,#19b8b0,#ffd34f);box-shadow:0 0 10px #22c5ca55}
+@media(max-width:900px){.timeline-branch{align-items:stretch;flex-direction:column}.timeline-branch label{grid-template-columns:1fr}.timeline-flow{min-width:660px}.detail-timeline{overflow:auto}}
