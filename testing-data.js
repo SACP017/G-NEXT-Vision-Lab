@@ -103,7 +103,22 @@ function openOpportunityView(view, project = '') {
 renderTable = function() {
   const q = ($('#search')?.value || $('#search2')?.value || '').toLowerCase();
   const list = opportunityScope(visible()).filter(record => Object.values(record).join(' ').toLowerCase().includes(q));
-  const html = list.map(record => `<tr><td><button class="op-link" data-op="${record.op}">${record.op}</button></td><td>${record.ref}</td><td><span class="business-state">${record.business}</span></td><td><span class="block-cell">${record.block1}</span></td><td><span class="block-cell">${record.block2}</span></td><td>${record.bank}</td><td><b>${responsibleFor(record)}</b></td><td>${current === 'admin' ? `<select class="assign" data-op="${record.op}"><option>${record.closure}</option><option>NGDS - Wendy Luna</option><option>NGDS - Tania Guzmán</option><option>NGDS - Santiago Ausique</option><option>NGDS - Alejandra Marin</option></select>` : '⋮'}</td></tr>`).join('');
+  const statusTone = {'Finalizado':'mint', 'En gestión':'violet', 'Pendiente':'amber', 'En riesgo':'pink'};
+  const initials = value => String(value || 'NA').split(/\s+/).filter(Boolean).slice(-2).map(part => part[0]).join('').toUpperCase();
+  const html = list.map(record => {
+    const responsible = responsibleFor(record);
+    const tone = statusTone[record.status] || 'cyan';
+    return `<tr class="opportunity-record tone-${tone}">
+      <td data-label="Oportunidad" class="opportunity-id-cell"><div class="opportunity-id"><span class="opportunity-signal"></span><div><button class="op-link" data-op="${record.op}">#${record.op}</button><small>${record.project}</small></div></div></td>
+      <td data-label="Referencia"><span class="reference-code">${record.ref}</span></td>
+      <td data-label="Estado del negocio"><span class="business-state"><i></i>${record.business}</span><small class="record-status">${record.status}</small></td>
+      <td data-label="Bloqueo 1"><span class="block-cell"><i>01</i>${record.block1}</span></td>
+      <td data-label="Bloqueo 2"><span class="block-cell"><i>02</i>${record.block2}</span></td>
+      <td data-label="Entidad real de crédito"><span class="bank-cell"><i>◇</i>${record.bank}</span></td>
+      <td data-label="Analista responsable"><span class="analyst-cell"><i>${initials(responsible)}</i><b>${responsible}</b></span></td>
+      <td data-label="Acción">${current === 'admin' ? `<select class="assign" data-op="${record.op}"><option>${record.closure}</option><option>NGDS - Wendy Luna</option><option>NGDS - Tania Guzmán</option><option>NGDS - Santiago Ausique</option><option>NGDS - Alejandra Marin</option></select>` : `<button class="row-action" type="button" data-op="${record.op}" aria-label="Abrir oportunidad ${record.op}">↗</button>`}</td>
+    </tr>`;
+  }).join('');
   if ($('#rows')) $('#rows').innerHTML = html;
   if ($('#rows2')) $('#rows2').innerHTML = html;
   if ($('#total')) $('#total').textContent = visible().length;
@@ -116,6 +131,7 @@ renderTable = function() {
     renderTable();
   }));
   document.querySelectorAll('.op-link').forEach(link => link.addEventListener('click', () => openDetail(link.dataset.op)));
+  document.querySelectorAll('.row-action').forEach(button => button.addEventListener('click', () => openDetail(button.dataset.op)));
   syncDashboardAnalytics();
 };
 

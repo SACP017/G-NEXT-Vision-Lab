@@ -8,13 +8,41 @@
   html('.home-heading', 'afterend', `
     <section class="vision-hero" aria-label="Centro de decisiones">
       <div class="vision-hero-copy"><span class="vision-kicker"><i></i> CENTRO DE DECISIONES / WENDY LUNA</span>
-        <h2>Haz que cada oportunidad <em>avance.</em></h2>
-        <p>Una lectura visual del pipeline, los casos que necesitan atención y la siguiente mejor acción.</p>
+        <h2>Haz que cada negocio <em>avance.</em></h2>
+        <p>Una lectura visual de los casos que necesitan atención y la siguiente mejor acción.</p>
         <div class="vision-hero-actions"><button type="button" class="vision-button" data-vision-nav="opportunities">Explorar oportunidades <span>↗</span></button><button type="button" class="vision-ghost" data-vision-nav="reports">Ver inteligencia <span>→</span></button></div>
       </div>
-      <div class="vision-orbit" aria-hidden="true"><div class="orbit-rim orbit-rim-one"></div><div class="orbit-rim orbit-rim-two"></div><div class="orbit-core"><span>PIPELINE</span><strong>${data.length}</strong><small>oportunidades</small></div><i class="orbit-node n1"></i><i class="orbit-node n2"></i><i class="orbit-node n3"></i></div>
+      <div class="vision-orbit" aria-hidden="true"><div class="orbit-rim orbit-rim-one"></div><div class="orbit-rim orbit-rim-two"></div><div class="orbit-core"><span>TU CUMPLIMIENTO</span><strong id="complianceValue" data-target="80">0%</strong><small>AVANCE</small></div><i class="orbit-node n1"></i><i class="orbit-node n2"></i><i class="orbit-node n3"></i></div>
       <div class="vision-hero-footer"><span><i></i> Datos de demostración</span><span>VISIÓN 360° <b>✦</b></span></div>
     </section>`);
+
+  let complianceTimer = 0;
+  const animateCompliance = () => {
+    const value = document.getElementById('complianceValue');
+    if (!value) return;
+    clearInterval(complianceTimer);
+    const target = Number(value.dataset.target) || 80;
+    if (matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      value.textContent = `${target}%`;
+      return;
+    }
+    let current = 0;
+    value.textContent = '0%';
+    value.classList.remove('is-counting');
+    void value.offsetWidth;
+    value.classList.add('is-counting');
+    complianceTimer = setInterval(() => {
+      const remaining = target - current;
+      current = Math.min(target, current + Math.max(1, Math.ceil(remaining * .2)));
+      value.textContent = `${current}%`;
+      if (current >= target) {
+        clearInterval(complianceTimer);
+        value.classList.remove('is-counting');
+      }
+    }, 35);
+  };
+  setTimeout(animateCompliance, 100);
+  document.querySelector('nav a[data-page="dashboard"]')?.addEventListener('click', () => setTimeout(animateCompliance, 40));
 
   html('.home-kpis', 'afterend', `
     <section class="vision-section">
@@ -37,7 +65,7 @@
   const urgent = [...byStatus('En riesgo'), ...byStatus('Pendiente')].slice(0, 5);
   html('.opportunity-command', 'afterend', `
     <section class="vision-radar"><div class="vision-section-head"><div><span class="vision-label">02 / RADAR DE ACCIÓN</span><h2>Empieza donde más importa</h2><p>Casos en riesgo y pendientes según los datos de esta demostración.</p></div><span class="vision-mini-tag">${count(urgent)} EN FOCO</span></div>
-    <div class="radar-list">${urgent.map((item, index) => `<button class="radar-item" type="button" data-open-op="${item.op}"><span class="radar-rank">0${index + 1}</span><span class="radar-item-main"><strong>${item.ref}</strong><small>Oportunidad #${item.op} · ${item.validator}</small></span><span class="radar-state ${item.status === 'En riesgo' ? 'risk' : ''}">${item.status}</span><span class="radar-arrow">↗</span></button>`).join('')}</div></section>`);
+    <div class="radar-list">${urgent.map((item, index) => `<button class="radar-item radar-flip ${item.status === 'En riesgo' ? 'is-risk' : 'is-pending'}" type="button" data-open-op="${item.op}" aria-label="Abrir oportunidad ${item.op}"><span class="radar-flip-inner"><span class="radar-face radar-front"><span class="radar-rank">0${index + 1}</span><span class="radar-item-main"><strong>#${item.op}</strong><small>${item.project} · ${item.ref}</small></span><span class="radar-state ${item.status === 'En riesgo' ? 'risk' : ''}">${item.status}</span><span class="radar-arrow">↗</span></span><span class="radar-face radar-back"><span class="radar-back-label">RESUMEN DEL NEGOCIO</span><strong>${item.business}</strong><span class="radar-summary"><span><i>Proyecto</i><b>${item.project}</b></span><span><i>Bloqueo principal</i><b>${item.block1}</b></span><span><i>Responsable</i><b>${responsibleFor(item)}</b></span></span><span class="radar-back-action">Abrir oportunidad <b>↗</b></span></span></span></button>`).join('')}</div></section>`);
 
   html('.reports-heading', 'afterend', `
     <section class="scenario-lab"><div class="scenario-copy"><span class="vision-label">03 / LABORATORIO DE ESCENARIOS</span><h2>¿Qué pasa si recuperamos casos?</h2><p>Mueve el control para explorar un escenario hipotético. Esta visualización no es una predicción.</p><label for="scenarioRange">Casos en riesgo recuperados <strong id="scenarioValue">0</strong></label><input id="scenarioRange" type="range" min="0" max="${byStatus('En riesgo').length}" value="0" aria-label="Casos en riesgo recuperados"></div><div class="scenario-result"><span>ESCENARIO SIMULADO</span><strong id="scenarioRate">0%</strong><small>de casos finalizados o recuperados</small><div class="scenario-track"><i id="scenarioFill"></i></div><p id="scenarioNarrative"></p></div></section>`);

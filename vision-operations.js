@@ -30,7 +30,7 @@
     if (!record) return;
     const severity = record.status === 'En riesgo' ? 92 : 58;
     card.style.setProperty('--radar-level',`${severity}%`);
-    card.insertAdjacentHTML('beforeend',`<span class="radar-signal"><i></i><small>${record.status === 'En riesgo' ? 'ATENCIÓN ALTA' : 'SEGUIMIENTO'}</small></span>`);
+    card.querySelector('.radar-front')?.insertAdjacentHTML('beforeend',`<span class="radar-signal"><i></i><small>${record.status === 'En riesgo' ? 'ATENCIÓN ALTA' : 'SEGUIMIENTO'}</small></span>`);
   });
 
   const toolbar = document.createElement('div');
