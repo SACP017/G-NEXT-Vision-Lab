@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 88" role="img" aria-labelledby="title">
+  <title id="title">G-NEXT</title>
+  <g font-family="Arial Black, Arial, sans-serif" font-weight="900">
+    <text x="0" y="68" font-size="68" fill="#ffffff" letter-spacing="-5">G-</text>
+    <text x="82" y="68" font-size="68" fill="#20b8c7" letter-spacing="-5">Ne</text>
+    <path d="M194 22l18 10-13 10-18-11z" fill="#f36da2"/>
+    <path d="M181 57l18-15 13 10-18 15z" fill="#ffd65d"/>
+    <path d="M212 32l19-10 13 9-19 11z" fill="#75d4df"/>
+    <path d="M212 52l13-10 19 15-13 10z" fill="#7974ec"/>
+    <text x="246" y="68" font-size="68" fill="#ffffff" letter-spacing="-4">t</text>
+  </g>
+</svg>
