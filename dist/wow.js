@@ -1,6 +1,7 @@
 /* G-NEXT Vision Lab: interactive presentation layer over the existing demo data. */
 (() => {
   const data = typeof records !== 'undefined' ? records : [];
+  const total = Math.max(1, data.length);
   const byStatus = status => data.filter(item => item.status === status);
   const html = (selector, position, content) => document.querySelector(selector)?.insertAdjacentHTML(position, content);
   const count = items => String(items.length).padStart(2, '0');
