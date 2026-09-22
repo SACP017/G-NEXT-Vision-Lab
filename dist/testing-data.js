@@ -74,6 +74,15 @@ function setOperationalTableHeaders() {
 
 let opportunityView = 'assigned';
 let selectedProject = '';
+const opportunityColumnFilters = {
+  op: [],
+  ref: [],
+  status: [],
+  block1: [],
+  block2: [],
+  bank: [],
+  analyst: []
+};
 
 function opportunityScope(list) {
   if (opportunityView === 'projects') return list.filter(record => record.status !== 'Finalizado');
@@ -91,18 +100,35 @@ function opportunityScopeLabel() {
   return 'Todas las oportunidades asignadas a Wendy Luna';
 }
 
+function resetOpportunityFilters(resetScope = false) {
+  if (resetScope) {
+    opportunityView = 'assigned';
+    selectedProject = '';
+  }
+  if ($('#search2')) $('#search2').value = '';
+  Object.keys(opportunityColumnFilters).forEach(key => { opportunityColumnFilters[key] = []; });
+}
+
 function openOpportunityView(view, project = '') {
   opportunityView = view;
   selectedProject = project;
-  if ($('#search2')) $('#search2').value = '';
+  resetOpportunityFilters();
   setPage('opportunities');
   renderTable();
   history.replaceState(null, '', '#oportunidades');
 }
 
 renderTable = function() {
-  const q = ($('#search')?.value || $('#search2')?.value || '').toLowerCase();
-  const list = opportunityScope(visible()).filter(record => Object.values(record).join(' ').toLowerCase().includes(q));
+  const q = ($('#search2')?.value || '').trim().toLowerCase();
+  const list = opportunityScope(visible()).filter(record => {
+    const matchesSearch = !q || Object.values(record).join(' ').toLowerCase().includes(q);
+    const matchesColumns = Object.entries(opportunityColumnFilters).every(([key,values]) => {
+      if (!values.length) return true;
+      const recordValue = key === 'analyst' ? responsibleFor(record) : record[key];
+      return values.includes(String(recordValue || ''));
+    });
+    return matchesSearch && matchesColumns;
+  });
   const statusTone = {'Finalizado':'mint', 'En gestión':'violet', 'Pendiente':'amber', 'En riesgo':'pink'};
   const initials = value => String(value || 'NA').split(/\s+/).filter(Boolean).slice(-2).map(part => part[0]).join('').toUpperCase();
   const html = list.map(record => {
@@ -118,7 +144,7 @@ renderTable = function() {
       <td data-label="Analista responsable"><span class="analyst-cell"><i>${initials(responsible)}</i><b>${responsible}</b></span></td>
       <td data-label="Acción">${current === 'admin' ? `<select class="assign" data-op="${record.op}"><option>${record.closure}</option><option>NGDS - Wendy Luna</option><option>NGDS - Tania Guzmán</option><option>NGDS - Santiago Ausique</option><option>NGDS - Alejandra Marin</option></select>` : `<button class="row-action" type="button" data-op="${record.op}" aria-label="Abrir oportunidad ${record.op}">↗</button>`}</td>
     </tr>`;
-  }).join('');
+  }).join('') || `<tr class="opportunity-empty"><td colspan="8"><strong>No encontramos oportunidades con estos filtros.</strong><span>Prueba otra combinación o limpia los filtros de las columnas.</span></td></tr>`;
   if ($('#rows')) $('#rows').innerHTML = html;
   if ($('#rows2')) $('#rows2').innerHTML = html;
   if ($('#total')) $('#total').textContent = visible().length;
@@ -336,8 +362,7 @@ openDetail = function(op) {
 setOperationalTableHeaders();
 document.querySelectorAll('[data-home-filter]').forEach(button => button.addEventListener('click', () => openOpportunityView(button.dataset.homeFilter)));
 document.querySelector('nav a[data-page="opportunities"]')?.addEventListener('click', () => {
-  opportunityView = 'assigned';
-  selectedProject = '';
+  resetOpportunityFilters(true);
   renderTable();
 });
 renderTable();

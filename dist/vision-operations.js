@@ -11,17 +11,28 @@
   const h = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const format = value => String(value).padStart(2,'0');
   const count = status => all.filter(record => record.status === status).length;
+  const opportunityCommand = document.querySelector('.page[data-page="opportunities"] .opportunity-command');
+  opportunityCommand?.classList.add('is-streamlined');
+  opportunityCommand?.querySelector('.opportunity-command-grid')?.remove();
+  opportunityCommand?.querySelector('.command-heading > .primary')?.remove();
   const flow = document.createElement('section');
   flow.className = 'ops-flow';
   flow.innerHTML = `<div class="ops-flow-heading"><div><span class="vision-label">MAPA VIVO / 17 OPORTUNIDADES</span><h2>El recorrido hacia el cierre</h2><p>Explora una etapa y salta al listado de los casos que la componen.</p></div><div class="ops-flow-total"><strong>${format(all.length)}</strong><span>CASOS EN EL MAPA</span></div></div><div class="ops-spine" role="group" aria-label="Etapas del pipeline"></div><div class="ops-flow-foot"><span><i></i> Datos del prototipo</span><span>Selecciona una etapa para filtrar el listado ↗</span></div>`;
-  document.querySelector('.vision-radar')?.before(flow);
+  const readyPanel = document.querySelector('.page[data-page="opportunities"] .ready-to-send-radar');
+  readyPanel?.before(flow);
+  if (readyPanel) {
+    const overview = document.createElement('div');
+    overview.className = 'opportunity-overview-split';
+    flow.before(overview);
+    overview.append(flow, readyPanel);
+  }
   const spine = flow.querySelector('.ops-spine');
   spine.innerHTML = statusOrder.map((stage,index) => {
     const cases = all.filter(record => record.status === stage.key);
     return `<button class="ops-node ${stage.tone}" type="button" data-flow="${h(stage.key)}" aria-label="Ver ${cases.length} casos en ${h(stage.title)}"><span class="ops-node-top"><b>0${index+1}</b><i>${stage.icon}</i></span><strong>${format(cases.length)}</strong><span class="ops-node-title">${stage.title}</span><small>${stage.description}</small><span class="ops-node-foot"><span>${Math.round(cases.length / Math.max(1,all.length) * 100)}% del total</span><b>↗</b></span></button>`;
   }).join('');
 
-  const radar = document.querySelector('.vision-radar');
+  const radar = document.querySelector('.page[data-page="dashboard"] .home-action-radar');
   radar?.classList.add('radar-command');
   const highRisk = all.filter(record => record.status === 'En riesgo');
   radar?.querySelector('.vision-section-head')?.insertAdjacentHTML('afterend', `<div class="radar-beacon"><div class="beacon-visual" aria-hidden="true"><div class="beacon-circle a"></div><div class="beacon-circle b"></div><div class="beacon-circle c"></div><span>✦</span></div><div class="beacon-copy"><span>SEÑAL DE ATENCIÓN</span><strong>${format(highRisk.length)} negocios necesitan intervención</strong><p>Prioriza bloqueos de crédito, respuesta del cliente y documentos para desistimiento.</p></div><button type="button" class="beacon-action" data-risk-view>Ver casos en riesgo <span>↗</span></button></div>`);
@@ -31,6 +42,91 @@
     const severity = record.status === 'En riesgo' ? 92 : 58;
     card.style.setProperty('--radar-level',`${severity}%`);
     card.querySelector('.radar-front')?.insertAdjacentHTML('beforeend',`<span class="radar-signal"><i></i><small>${record.status === 'En riesgo' ? 'ATENCIÓN ALTA' : 'SEGUIMIENTO'}</small></span>`);
+  });
+
+  const tableFilters = document.querySelector('.opportunity-table .filters');
+  if (tableFilters) {
+    tableFilters.querySelectorAll(':scope > button.filter').forEach(button => button.remove());
+    tableFilters.querySelector('#search2')?.addEventListener('input',() => renderTable());
+  }
+
+  const filterColumns = [
+    {key:'op',index:0,label:'oportunidad',value:record => record.op,option:record => `#${record.op} · ${record.project}`},
+    {key:'ref',index:1,label:'referencia',value:record => record.ref},
+    {key:'status',index:2,label:'estado del negocio',value:record => record.status},
+    {key:'block1',index:3,label:'bloqueo 1',value:record => record.block1},
+    {key:'block2',index:4,label:'bloqueo 2',value:record => record.block2},
+    {key:'bank',index:5,label:'entidad real de crédito',value:record => record.bank},
+    {key:'analyst',index:6,label:'analista responsable',value:record => responsibleFor(record)}
+  ];
+  const headerCells = [...document.querySelectorAll('.opportunity-table thead th')];
+  filterColumns.forEach(definition => {
+    const cell = headerCells[definition.index];
+    if (!cell || cell.querySelector('[data-column-filter-button]')) return;
+    const title = cell.textContent.trim();
+    const optionMap = new Map();
+    all.forEach(record => {
+      const value = String(definition.value(record) || '');
+      if (value && !optionMap.has(value)) optionMap.set(value,String(definition.option?.(record) || value));
+    });
+    const options = [...optionMap.entries()]
+      .sort((left,right) => left[1].localeCompare(right[1],'es',{numeric:true}))
+      .map(([value,label]) => `<label class="column-filter-option" data-option-label="${h(label)}"><input type="checkbox" value="${h(value)}" data-column-filter-check="${definition.key}"><span>${h(label)}</span></label>`).join('');
+    cell.textContent = '';
+    cell.insertAdjacentHTML('beforeend', `<div class="column-filter-heading"><span>${h(title)}</span><button type="button" class="column-filter-button" data-column-filter-button="${definition.key}" aria-label="Filtrar por ${h(definition.label)}" aria-expanded="false"><span aria-hidden="true">▼</span><b data-column-filter-count></b></button><div class="column-filter-menu" data-column-filter-menu="${definition.key}" hidden><label class="column-filter-search"><span>Buscar en ${h(definition.label)}</span><input type="search" data-column-option-search="${definition.key}" placeholder="Escribe para buscar..." autocomplete="off"></label><div class="column-filter-options" role="group" aria-label="Opciones de ${h(definition.label)}">${options}</div><div class="column-filter-empty" hidden>Sin opciones que coincidan.</div><button type="button" data-clear-column="${definition.key}">Limpiar este filtro</button></div></div>`);
+  });
+  const opportunityTable = document.querySelector('.opportunity-table');
+  const closeColumnMenus = except => {
+    opportunityTable?.querySelectorAll('[data-column-filter-menu]').forEach(menu => {
+      if (menu === except) return;
+      menu.hidden = true;
+      const button = opportunityTable.querySelector(`[data-column-filter-button="${menu.dataset.columnFilterMenu}"]`);
+      button?.setAttribute('aria-expanded','false');
+    });
+  };
+  opportunityTable?.addEventListener('click',event => {
+    const trigger = event.target.closest('[data-column-filter-button]');
+    if (trigger) {
+      const menu = opportunityTable.querySelector(`[data-column-filter-menu="${trigger.dataset.columnFilterButton}"]`);
+      const willOpen = menu?.hidden;
+      closeColumnMenus(menu);
+      if (menu) menu.hidden = !willOpen;
+      trigger.setAttribute('aria-expanded',String(Boolean(willOpen)));
+      if (willOpen) menu.querySelector('[data-column-option-search]')?.focus();
+      return;
+    }
+    const clear = event.target.closest('[data-clear-column]');
+    if (clear) {
+      opportunityColumnFilters[clear.dataset.clearColumn] = [];
+      renderTable();
+    }
+  });
+  opportunityTable?.addEventListener('change',event => {
+    const checkbox = event.target.closest('[data-column-filter-check]');
+    if (!checkbox) return;
+    const key = checkbox.dataset.columnFilterCheck;
+    opportunityColumnFilters[key] = [...opportunityTable.querySelectorAll(`[data-column-filter-check="${key}"]:checked`)].map(input => input.value);
+    renderTable();
+  });
+  opportunityTable?.addEventListener('input',event => {
+    const search = event.target.closest('[data-column-option-search]');
+    if (!search) return;
+    const menu = search.closest('[data-column-filter-menu]');
+    const query = search.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    let visibleOptions = 0;
+    menu.querySelectorAll('.column-filter-option').forEach(option => {
+      const label = option.dataset.optionLabel.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      option.hidden = Boolean(query) && !label.includes(query);
+      if (!option.hidden) visibleOptions += 1;
+    });
+    const empty = menu.querySelector('.column-filter-empty');
+    if (empty) empty.hidden = visibleOptions > 0;
+  });
+  document.addEventListener('click',event => {
+    if (!event.target.closest('.column-filter-heading')) closeColumnMenus();
+  });
+  document.addEventListener('keydown',event => {
+    if (event.key === 'Escape') closeColumnMenus();
   });
 
   const toolbar = document.createElement('div');
@@ -106,12 +202,23 @@
     const table = document.querySelector('#rows2')?.closest('table');
     if (!table) return;
     const th = table.querySelector('thead th:first-child');
-    if (th && !th.querySelector('#selectAllCases')) th.insertAdjacentHTML('afterbegin','<label class="select-cell"><input id="selectAllCases" type="checkbox" aria-label="Seleccionar todos los casos visibles"><span></span></label>');
+    if (th && !th.querySelector('#selectAllCases')) {
+      const heading = th.querySelector('.column-filter-heading') || th;
+      heading.insertAdjacentHTML('afterbegin','<label class="select-cell"><input id="selectAllCases" type="checkbox" aria-label="Seleccionar todos los casos visibles"><span></span></label>');
+    }
     table.querySelectorAll('#rows2 tr').forEach(row => {
       const op = row.querySelector('.op-link')?.dataset.op;
       if (!op) return;
       row.dataset.record = op;
       row.querySelector('td:first-child')?.insertAdjacentHTML('afterbegin',`<label class="select-cell"><input class="row-select" type="checkbox" value="${op}" aria-label="Seleccionar oportunidad ${op}"><span></span></label>`);
+    });
+    filterColumns.forEach(definition => {
+      const values = opportunityColumnFilters[definition.key];
+      const button = table.querySelector(`[data-column-filter-button="${definition.key}"]`);
+      button?.classList.toggle('is-active',values.length > 0);
+      const count = button?.querySelector('[data-column-filter-count]');
+      if (count) count.textContent = values.length ? values.length : '';
+      table.querySelectorAll(`[data-column-filter-check="${definition.key}"]`).forEach(input => { input.checked = values.includes(input.value); });
     });
     renderSelection();
   };
@@ -129,8 +236,7 @@
 
   const filterStatus = status => {
     openOpportunityView('assigned');
-    const field = document.getElementById('search2');
-    field.value = status;
+    opportunityColumnFilters.status = [status];
     renderTable();
     document.querySelector('.opportunity-table')?.scrollIntoView({behavior:'smooth',block:'start'});
   };
