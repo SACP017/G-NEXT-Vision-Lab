@@ -44,24 +44,6 @@
   setTimeout(animateCompliance, 100);
   document.querySelector('nav a[data-page="dashboard"]')?.addEventListener('click', () => setTimeout(animateCompliance, 40));
 
-  html('.home-kpis', 'afterend', `
-    <section class="vision-section">
-      <div class="vision-section-head"><div><span class="vision-label">01 / EL RECORRIDO</span><h2>El pipeline, de un vistazo</h2><p>Selecciona una etapa para abrir los casos correspondientes.</p></div><span class="vision-mini-tag">EMBUDO INTERACTIVO ↗</span></div>
-      <div class="vision-funnel" id="visionFunnel"></div>
-    </section>`);
-
-  const funnel = [
-    {name:'Pendientes', key:'Pendiente', color:'amber', note:'Requieren un primer impulso'},
-    {name:'En gestión', key:'En gestión', color:'violet', note:'Trabajo en movimiento'},
-    {name:'En riesgo', key:'En riesgo', color:'coral', note:'Necesitan intervención'},
-    {name:'Finalizados', key:'Finalizado', color:'mint', note:'Meta alcanzada'}
-  ];
-  const total = Math.max(1, data.length);
-  document.getElementById('visionFunnel').innerHTML = funnel.map((stage, index) => {
-    const value = byStatus(stage.key).length;
-    return `<button class="funnel-stage ${stage.color}" type="button" data-stage="${stage.key}" style="--share:${Math.max(12, value / total * 100)}%"><span class="stage-index">0${index + 1} / 04</span><span class="stage-number">${count(byStatus(stage.key))}<small>${Math.round(value / total * 100)}%</small></span><strong>${stage.name}</strong><span class="stage-note">${stage.note}</span><span class="stage-meter"><i></i></span><span class="stage-arrow">↗</span></button>`;
-  }).join('');
-
   const readyToSend = data.filter(item => item.status !== 'Finalizado' && /PROMESA POR ENVIAR/i.test(item.business));
   document.querySelector('.page[data-page="opportunities"] .opportunity-command')?.insertAdjacentHTML('afterend', `
     <section class="vision-radar radar-command ready-to-send-radar" aria-labelledby="homeReadyTitle">
@@ -70,8 +52,8 @@
     </section>`);
 
   const urgent = [...byStatus('En riesgo'), ...byStatus('Pendiente')].slice(0, 5);
-  document.getElementById('visionFunnel')?.closest('.vision-section')?.insertAdjacentHTML('afterend', `
-    <section class="vision-radar home-action-radar"><div class="vision-section-head"><div><span class="vision-label">02 / RADAR DE ACCIÓN</span><h2>Empieza donde más importa</h2><p>Casos en riesgo y pendientes según los datos de esta demostración.</p></div><span class="vision-mini-tag">${count(urgent)} EN FOCO</span></div>
+  document.querySelector('.page[data-page="dashboard"] .home-kpis')?.insertAdjacentHTML('afterend', `
+    <section class="vision-radar home-action-radar"><div class="vision-section-head"><div><span class="vision-label">RADAR DE ACCIÓN</span><h2>Empieza donde más importa</h2><p>Casos en riesgo y pendientes según los datos de esta demostración.</p></div><span class="vision-mini-tag">${count(urgent)} EN FOCO</span></div>
     <div class="radar-list">${urgent.map((item, index) => `<button class="radar-item radar-flip ${item.status === 'En riesgo' ? 'is-risk' : 'is-pending'}" type="button" data-open-op="${item.op}" aria-label="Abrir oportunidad ${item.op}"><span class="radar-flip-inner"><span class="radar-face radar-front"><span class="radar-rank">0${index + 1}</span><span class="radar-item-main"><strong>#${item.op}</strong><small>${item.project} · ${item.ref}</small></span><span class="radar-state ${item.status === 'En riesgo' ? 'risk' : ''}">${item.status}</span><span class="radar-arrow">↗</span></span><span class="radar-face radar-back"><span class="radar-back-label">RESUMEN DEL NEGOCIO</span><strong>${item.business}</strong><span class="radar-summary"><span><i>Proyecto</i><b>${item.project}</b></span><span><i>Bloqueo principal</i><b>${item.block1}</b></span><span><i>Responsable</i><b>${responsibleFor(item)}</b></span></span><span class="radar-back-action">Abrir oportunidad <b>↗</b></span></span></span></button>`).join('')}</div></section>`);
 
   html('.reports-heading', 'afterend', `
@@ -81,13 +63,6 @@
   html('.user-hero', 'afterend', `<section class="profile-spotlight"><div><span class="vision-label">TU HUELLA EN G-NEXT</span><h2>Tu trabajo mueve el resultado.</h2><p>Cada caso finalizado representa un avance real del equipo.</p></div><div class="profile-spark" aria-hidden="true"><span style="height:38%"></span><span style="height:54%"></span><span style="height:48%"></span><span style="height:70%"></span><span style="height:82%"></span><span style="height:100%"></span></div><b>✦</b></section>`);
 
   document.querySelectorAll('[data-vision-nav]').forEach(button => button.addEventListener('click', () => { setPage(button.dataset.visionNav); window.scrollTo({top:0,behavior:'smooth'}); }));
-  document.querySelectorAll('[data-stage]').forEach(button => button.addEventListener('click', () => {
-    setPage('opportunities');
-    const term = button.dataset.stage;
-    const search = document.getElementById('search2');
-    if (search) { search.value = term; search.dispatchEvent(new Event('input', {bubbles:true})); }
-    document.querySelector('.opportunity-table')?.scrollIntoView({behavior:'smooth',block:'start'});
-  }));
   document.querySelectorAll('[data-open-op]').forEach(button => button.addEventListener('click', () => { openDetail(button.dataset.openOp); window.scrollTo({top:0,behavior:'smooth'}); }));
   const range = document.getElementById('scenarioRange');
   const updateScenario = () => {

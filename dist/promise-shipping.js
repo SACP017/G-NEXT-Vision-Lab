@@ -18,6 +18,8 @@
   const navLink = document.querySelector('nav a[data-page="promise-shipping"]');
   const form = document.getElementById('promiseSimpleForm');
   const field = document.getElementById('promiseOpportunity');
+  const saveChangesButton = document.querySelector('.page[data-page="detail"] .detail-actions .primary');
+  saveChangesButton?.insertAdjacentHTML('beforebegin', '<button class="outline small promise-detail-action" id="openPromiseShipping" type="button">✉ Envío de promesas</button>');
   navLink.addEventListener('click', event => {
     event.preventDefault();
     setPage('promise-shipping');
@@ -31,6 +33,14 @@
   document.getElementById('cancelPromise').addEventListener('click',() => {
     field.value = '';
     field.focus();
+  });
+  document.getElementById('openPromiseShipping')?.addEventListener('click', () => {
+    const opportunity = document.getElementById('detailOp')?.textContent?.replace(/\D/g, '') || '';
+    field.value = opportunity;
+    setPage('promise-shipping');
+    history.replaceState(null, '', '#envio-promesas');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    window.setTimeout(() => field.focus(), 250);
   });
   if (location.hash === '#envio-promesas') setPage('promise-shipping');
 })();
