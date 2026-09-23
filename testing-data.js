@@ -88,6 +88,7 @@ function opportunityScope(list) {
   if (opportunityView === 'projects') return list.filter(record => record.status !== 'Finalizado');
   if (opportunityView === 'ready') return list.filter(record => record.status !== 'Finalizado' && /PROMESA POR ENVIAR/i.test(record.business));
   if (opportunityView === 'ranking') return list.filter(record => record.status === 'En riesgo');
+  if (opportunityView === 'banks') return list.filter(record => !/sin entidad|contado/i.test(record.bank));
   if (opportunityView === 'project') return list.filter(record => record.status !== 'Finalizado' && record.project === selectedProject);
   return list;
 }
@@ -96,6 +97,7 @@ function opportunityScopeLabel() {
   if (opportunityView === 'projects') return 'Oportunidades pertenecientes a proyectos activos';
   if (opportunityView === 'ready') return 'Promesas listas para enviar';
   if (opportunityView === 'ranking') return 'Casos prioritarios para mejorar tu posición en el ranking';
+  if (opportunityView === 'banks') return 'Oportunidades con entidad de crédito vinculada';
   if (opportunityView === 'project') return `Proyecto: ${selectedProject}`;
   return 'Todas las oportunidades asignadas a Wendy Luna';
 }
@@ -255,10 +257,13 @@ function syncDashboardAnalytics() {
   }, {});
   const projectEntries = Object.entries(projects).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]));
   const readyToSend = activeList.filter(record => /PROMESA POR ENVIAR/i.test(record.business)).length;
+  const linkedBanks = new Set(list.map(record => record.bank).filter(bank => bank && !/sin entidad|contado/i.test(bank)));
   const projectsTotal = document.getElementById('homeProjects');
   const readyTotal = document.getElementById('homeReady');
+  const banksTotal = document.getElementById('homeBanks');
   if (projectsTotal) projectsTotal.textContent = projectEntries.length;
   if (readyTotal) readyTotal.textContent = pad(readyToSend);
+  if (banksTotal) banksTotal.textContent = pad(linkedBanks.size);
 
   const projectBars = document.getElementById('projectBars');
   if (projectBars) {
